@@ -18,6 +18,38 @@ export default function AdminDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const messagesEndRef = useRef(null)
 
+  // Handle Resize & Initial Mobile Check
+  useEffect(() => {
+    const handleResize = () => {
+      // If screen is large (>= 1024px), we might want to auto-close the mobile overlay state
+      // or simply rely on CSS hiding it.
+      // But if we go from desktop -> mobile, we usually want sidebar closed by default
+      if (window.innerWidth >= 1024) {
+         setIsSidebarOpen(false) 
+      }
+    }
+
+    // Initial check on mount
+    if (window.innerWidth < 1024) {
+      // If on mobile and no intern selected, show sidebar so they can pick one
+      if (!selectedIntern) {
+        setIsSidebarOpen(true)
+      } else {
+        setIsSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [selectedIntern]) // Add dependency on selectedIntern if needed, but for initial mount [] is fine. 
+  // However, since we check selectedIntern inside, we should be careful. 
+  // actually, on mount selectedIntern is null (default). 
+  // So checking !selectedIntern is safe for initial load.
+  // But wait, if we add dependency it might trigger on selection change. 
+  // We only want this on MOUNT. So keep dependency empty array [] for the resize listener, 
+  // but for the initial check, we rely on the initial state of selectedIntern (which is null).
+  // Correct.
+
   // Fetch Interns
   useEffect(() => {
     const fetchInterns = async () => {

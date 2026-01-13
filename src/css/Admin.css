@@ -20,7 +20,7 @@
   box-shadow: 4px 0 24px rgba(0,0,0,0.3);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .admin-sidebar {
     position: absolute;
     top: 0;
@@ -182,7 +182,7 @@
   cursor: pointer;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .admin-mobile-menu-btn {
     display: block;
   }
@@ -249,7 +249,7 @@
   word-wrap: break-word;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .admin-message-bubble {
     max-width: 85%;
   }
@@ -293,7 +293,7 @@
   height: auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .admin-chat-image {
     max-width: 200px;
     max-height: 250px;
@@ -328,7 +328,7 @@
   align-items: center;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .admin-input-form {
     padding: 1rem;
     gap: 0.5rem;

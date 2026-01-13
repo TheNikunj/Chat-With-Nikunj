@@ -61,7 +61,10 @@ export default function ChatArea({
 
   if (!selectedIntern) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-gray-500">
+      <div className="h-full flex flex-col items-center justify-center text-gray-500 relative">
+        <div className="absolute top-4 left-4 md:hidden">
+            <Menu className="h-6 w-6 text-gray-400 cursor-pointer" onClick={onOpenMobileMenu} />
+        </div>
         <MessageSquare className="h-12 w-12 mb-4 opacity-50" />
         <p className="text-lg">Select a chat to start messaging</p>
       </div>
