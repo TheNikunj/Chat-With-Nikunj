@@ -166,7 +166,14 @@ export default function ChatArea({
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={onSendMessage} className="intern-input-form relative">
+      <form 
+        onSubmit={(e) => {
+            onSendMessage(e)
+            // Force focus back to input to keep keyboard open on mobile
+            setTimeout(() => inputRef.current?.focus(), 10)
+        }} 
+        className="intern-input-form relative"
+      >
         {showEmojiPicker && (
             <div className="absolute bottom-16 left-4 z-50">
                 <EmojiPicker onEmojiClick={handleEmojiClick} theme="dark" />
@@ -214,7 +221,8 @@ export default function ChatArea({
           type="submit"
           disabled={!newMessage.trim()}
           className="intern-send-btn"
-          onMouseDown={(e) => e.preventDefault()} // Prevent button from stealing focus (keeps keyboard open)
+          onMouseDown={(e) => e.preventDefault()}
+          onTouchStart={(e) => e.preventDefault()} // Critical for mobile touch focus preservation
         >
           <Send className="h-5 w-5" />
         </button>
