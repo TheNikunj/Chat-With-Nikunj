@@ -1,0 +1,162 @@
+/* Light Mode Theme
+   Import this file or add the 'light-mode' class to the body to activate.
+   The styles here override the default dark theme in Intern.css and Admin.css.
+*/
+
+body.light-mode .intern-container,
+body.light-mode .admin-container {
+  background-color: #f8fafc; /* slate-50 */
+  color: #0f172a; /* slate-900 */
+}
+
+/* Sidebar */
+body.light-mode .intern-sidebar,
+body.light-mode .admin-sidebar {
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0; /* slate-200 */
+  box-shadow: 4px 0 24px rgba(0,0,0,0.05);
+}
+
+body.light-mode .intern-sidebar-title,
+body.light-mode .admin-sidebar-title {
+  color: #2563eb; /* blue-600 */
+}
+
+body.light-mode .intern-signout-btn,
+body.light-mode .admin-signout-btn {
+  color: #64748b; /* slate-500 */
+}
+
+body.light-mode .intern-signout-btn:hover,
+body.light-mode .admin-signout-btn:hover {
+  background-color: #f1f5f9; /* slate-100 */
+  color: #0f172a;
+}
+
+body.light-mode .admin-intern-item {
+  color: #475569; /* slate-600 */
+  border-bottom: 1px solid #f1f5f9;
+}
+
+body.light-mode .admin-intern-item:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+body.light-mode .admin-intern-item.active {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.1) 0%, transparent 100%);
+  border-left-color: #2563eb;
+  background-color: #eff6ff; /* blue-50 */
+  color: #1e40af; /* blue-800 */
+}
+
+/* Chat Area */
+body.light-mode .intern-chat-container,
+body.light-mode .admin-chat-container {
+  background-color: #f1f5f9; /* slate-100 */
+}
+
+body.light-mode .intern-chat-header,
+body.light-mode .admin-chat-header {
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+body.light-mode .intern-chat-title,
+body.light-mode .admin-chat-title {
+  color: #0f172a;
+}
+
+body.light-mode .intern-chat-name {
+  color: #000000; /* Force black in light mode */
+}
+
+/* Messages */
+body.light-mode .intern-message-bubble.received,
+body.light-mode .admin-message-bubble.received {
+  background-color: #ffffff;
+  color: #000000; /* Dark black as requested */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
+}
+
+body.light-mode .intern-message-bubble.sent,
+body.light-mode .admin-message-bubble.sent {
+  background-color: #d1fae5;
+  color: #000000; /* Dark black as requested */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border: 1px solid #a7f3d0;
+}
+
+body.light-mode .intern-message-time,
+body.light-mode .admin-message-time {
+  color: rgba(0, 0, 0, 0.7); /* Darker gray for time */
+  font-weight: 500;
+}
+
+/* Image Bubbles */
+body.light-mode .intern-image-bubble,
+body.light-mode .admin-image-bubble {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+body.light-mode .intern-chat-image,
+body.light-mode .admin-chat-image {
+  border: 1px solid #f1f5f9;
+}
+
+/* Input Area */
+body.light-mode .intern-input-form,
+body.light-mode .admin-input-form {
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid #e2e8f0;
+}
+
+body.light-mode .intern-input-field,
+body.light-mode .admin-input-field {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1; /* slate-300 */
+  color: #0f172a;
+}
+
+body.light-mode .intern-input-field:focus {
+  background-color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+body.light-mode .intern-upload-btn,
+body.light-mode .admin-upload-btn {
+  color: #64748b !important;
+}
+
+body.light-mode .intern-upload-btn:hover,
+body.light-mode .admin-upload-btn:hover {
+  background-color: #f1f5f9;
+  color: #2563eb !important;
+}
+
+/* Mobile Menu */
+/* Mobile Menu & Button Updates */
+body.light-mode .intern-mobile-menu-btn,
+body.light-mode .intern-fullscreen-btn,
+body.light-mode .admin-mobile-menu-btn {
+  color: #64748b;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+body.light-mode .intern-mobile-menu-btn:hover,
+body.light-mode .intern-fullscreen-btn:hover,
+body.light-mode .admin-mobile-menu-btn:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+/* Empty State */
+body.light-mode .h-full.flex.flex-col.items-center.justify-center.text-gray-500 {
+  color: #94a3b8; /* slate-400 */
+}
