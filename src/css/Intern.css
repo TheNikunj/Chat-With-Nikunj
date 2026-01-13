@@ -1,11 +1,23 @@
 /* Main Container */
 .intern-container {
   display: flex;
-  height: 100vh;
+  height: 100vh; /* Fallback */
+  height: 100dvh; /* Mobile viewport fix */
   background-color: #0f172a; /* slate-900 - darker/richer */
   color: #f8fafc; /* slate-50 */
   overflow: hidden;
   position: relative;
+}
+
+/* Fix for mobile keyboard pushing up content */
+@media (max-width: 1024px) {
+    .intern-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
 }
 
 /* Sidebar (Upload Area) */
