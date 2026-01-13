@@ -227,6 +227,7 @@ export default function ChatArea({
           type="submit"
           disabled={!newMessage.trim()}
           className="admin-send-btn"
+          onMouseDown={(e) => e.preventDefault()} // Prevent button from stealing focus (keeps keyboard open)
         >
           <Send className="h-5 w-5" />
         </button>
