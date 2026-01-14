@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { Send, Image as ImageIcon, Smile, SmilePlus, Menu, Star, Maximize, Minimize } from 'lucide-react'
+import { Send, Image as ImageIcon, Smile, SmilePlus, Menu, Star, Maximize, Minimize, Reply, X, Plus, FileText, CirclePlus } from 'lucide-react'
 import EmojiPicker from 'emoji-picker-react'
 import ChatImage from '../../components/ChatImage'
 import ImageModal from '../../components/ImageModal'
@@ -13,27 +13,35 @@ export default function ChatArea({
   newMessage, 
   setNewMessage, 
   onSendMessage, 
-  onImageUpload,
+  onFileUpload,
   onReaction,
+  onRequestClearChat, 
   messagesEndRef,
   onOpenMobileMenu
 }) {
   const fileInputRef = useRef(null)
+  const imageInputRef = useRef(null)
   const inputRef = useRef(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showPlusMenu, setShowPlusMenu] = useState(false)
   const [hoveredMessageId, setHoveredMessageId] = useState(null)
   const [isFullScreen, setIsFullScreen] = useState(false) // Track Full Screen
 
   const [selectedImage, setSelectedImage] = useState(null)
 
-  const handleIconClick = () => {
-    fileInputRef.current?.click()
-  }
-
   const handleFileChange = (e) => {
     const file = e.target.files[0]
     if (file) {
-      onImageUpload(file)
+      onFileUpload(file)
+      setShowPlusMenu(false)
+    }
+  }
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      onFileUpload(file) // Reused generic handler
+      setShowPlusMenu(false)
     }
   }
 
@@ -51,10 +59,38 @@ export default function ChatArea({
   // Helper to render formatting
   const renderMessageBubble = (msg) => {
     const isImage = msg.content.startsWith('[IMAGE] ')
-    const isEmoji = !isImage && isEmojiOnly(msg.content)
+    const isFile = msg.content.startsWith('[FILE] ')
+    const isEmoji = !isImage && !isFile && isEmojiOnly(msg.content)
     
     // Time formatting
     const timeString = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    // [FILE] Rendering
+    if (isFile) {
+         const fileContent = msg.content.replace('[FILE] ', '')
+         const [url, fileName] = fileContent.split('|')
+         const displayFileName = fileName || 'Document'
+         
+         return (
+            <div className={`intern-message-bubble group relative ${msg.sender_id === user.id ? 'sent' : 'received'}`}>
+                 <div className="intern-bubble-content !flex-col !bg-transparent !p-0">
+                     <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-black/20 p-3 rounded-lg hover:bg-black/30 transition-colors border border-white/10 min-w-[200px]">
+                         <div className="bg-blue-500/20 p-2 rounded-full">
+                            <FileText className="w-6 h-6 text-blue-400" />
+                         </div>
+                         <div className="flex flex-col overflow-hidden">
+                             <span className="text-sm font-medium truncate text-white/90">{displayFileName}</span>
+                             <span className="text-xs text-blue-400">Click to open</span>
+                         </div>
+                     </a>
+                     <span className="intern-message-time inline-flex items-center gap-0.5 ml-auto align-bottom relative top-1">
+                        {timeString}
+                        <MessageStatus status={msg.status} isOwnMessage={msg.sender_id === user.id} />
+                    </span>
+                 </div>
+            </div>
+         )
+    }
 
     if (isImage) {
         const imageUrl = msg.content.replace('[IMAGE] ', '')
@@ -186,34 +222,66 @@ export default function ChatArea({
             </div>
         )}
         
+        {/* Hidden File Inputs */}
         <input 
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept="image/*"
-          onChange={handleFileChange}
-          style={{ display: 'none' }}
+            type="file" 
+            ref={imageInputRef} 
+            className="hidden" 
+            accept="image/*"
+            onChange={handleImageChange}
         />
-        
-        <div className="flex items-center gap-2">
-            <button
-            type="button"
-            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-            className="intern-upload-btn"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}
-            >
-            <Smile className="h-6 w-6" />
-            </button>            
+        <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            onChange={handleFileChange}
+        />
 
-            <button
-            type="button"
-            onClick={handleIconClick}
-            className="intern-upload-btn"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}
-            >
-            <ImageIcon className="h-6 w-6" />
-            </button>
+        {/* Plus Menu Button */}
+        <div className="relative">
+             <button
+               type="button"
+               onClick={() => setShowPlusMenu(!showPlusMenu)}
+               className="intern-upload-btn text-gray-400 hover:text-white"
+             >
+               <CirclePlus className={`h-6 w-6 transition-transform ${showPlusMenu ? 'rotate-45' : ''}`} />
+             </button>
+
+             {/* Plus Menu Popup */}
+             {showPlusMenu && (
+                 <div className="absolute bottom-12 left-0 bg-[#1e293b] border border-slate-700 rounded-xl shadow-xl p-2 w-48 z-50 animate-in fade-in slide-in-from-bottom-2 flex flex-col gap-1">
+                     <button
+                        type="button"
+                        onClick={() => imageInputRef.current?.click()}
+                        className="flex items-center gap-3 p-2 hover:bg-slate-700/50 rounded-lg text-left transition-colors"
+                     >
+                        <div className="bg-purple-500/20 p-2 rounded-full">
+                             <ImageIcon className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <span className="text-sm text-slate-200 font-medium">Photos & Videos</span>
+                     </button>
+                     <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center gap-3 p-2 hover:bg-slate-700/50 rounded-lg text-left transition-colors"
+                     >
+                        <div className="bg-blue-500/20 p-2 rounded-full">
+                             <FileText className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <span className="text-sm text-slate-200 font-medium">Document</span>
+                     </button>
+                 </div>
+             )}
         </div>
+
+        {/* Emoji Button */}
+        <button
+          type="button"
+          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          className="intern-upload-btn text-gray-400 hover:text-yellow-400 transition-colors"
+        >
+          <Smile className="h-6 w-6" />
+        </button>
 
         <input
           type="text"

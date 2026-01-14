@@ -307,38 +307,38 @@ export default function AdminDashboard() {
       }
   }
 
-  const handleImageUpload = async (file) => {
-      if (!file || !selectedIntern) return
+  const handleFileUpload = async (file) => {
+    if (!file) return
 
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExt}`
-      // Use strictly user.id to comply with typical RLS policies that enforce (storage.foldername(name))[1] = auth.uid()
-      const filePath = `${user.id}/${fileName}`
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${fileExt}`
+    const filePath = `${user.id}/${fileName}`
 
-      // 1. Upload to Storage
-      const { error: uploadError } = await supabase.storage
-        .from('intern-files')
-        .upload(filePath, file)
+    const { error: uploadError } = await supabase.storage
+      .from('intern-files')
+      .upload(filePath, file)
 
-      if (uploadError) {
-        alert('Error uploading file: ' + uploadError.message)
-        return
-      }
+    if (uploadError) {
+      alert('Error uploading file: ' + uploadError.message)
+      return
+    }
 
-      // 2. Get Signed URL
-      const { data, error: urlError } = await supabase.storage
-        .from('intern-files')
-        .createSignedUrl(filePath, 315360000) // 10 years
+    const { data, error: urlError } = await supabase.storage
+      .from('intern-files')
+      .createSignedUrl(filePath, 315360000)
 
-      if (urlError) {
-          alert('Error creating signed URL: ' + urlError.message)
-          return
-      }
-      
-      if (data) {
-          // 3. Send Message with [IMAGE] prefix
-          await insertMessage(`[IMAGE] ${data.signedUrl}`)
-      }
+    if (urlError) {
+      alert('Error creating signed URL: ' + urlError.message)
+      return
+    }
+    
+    if (data) {
+        if (file.type.startsWith('image/')) {
+            await insertMessage(`[IMAGE] ${data.signedUrl}`)
+        } else {
+            await insertMessage(`[FILE] ${data.signedUrl}|${file.name}`)
+        }
+    }
   }
 
   const handleClearChatRequest = () => {
@@ -451,7 +451,7 @@ export default function AdminDashboard() {
         newMessage={newMessage}
         setNewMessage={setNewMessage}
         onSendMessage={handleSendMessage}
-        onImageUpload={handleImageUpload}
+        onFileUpload={handleFileUpload}
         onReaction={handleReaction}
         onRequestClearChat={handleClearChatRequest}
         messagesEndRef={messagesEndRef}

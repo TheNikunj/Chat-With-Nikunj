@@ -178,7 +178,7 @@ export default function InternDashboard() {
       }
   }
 
-  const handleImageUpload = async (file) => {
+  const handleFileUpload = async (file) => {
     if (!file) return
 
     const fileExt = file.name.split('.').pop()
@@ -206,8 +206,13 @@ export default function InternDashboard() {
     }
     
     if (data) {
-        // 3. Send Message with [IMAGE] prefix
-        await insertMessage(`[IMAGE] ${data.signedUrl}`)
+        // 3. Send Message based on type
+        if (file.type.startsWith('image/')) {
+            await insertMessage(`[IMAGE] ${data.signedUrl}`)
+        } else {
+            // [FILE] url|filename
+            await insertMessage(`[FILE] ${data.signedUrl}|${file.name}`)
+        }
     }
   }
 
@@ -231,7 +236,7 @@ export default function InternDashboard() {
         newMessage={newMessage}
         setNewMessage={setNewMessage}
         onSendMessage={handleSendMessage}
-        onImageUpload={handleImageUpload}
+        onFileUpload={handleFileUpload}
         onReaction={handleReaction}
         messagesEndRef={messagesEndRef}
         onOpenMobileMenu={() => setIsSidebarOpen(true)}
