@@ -3,6 +3,7 @@ import { Send, MessageSquare, Trash2, Image as ImageIcon, Smile, SmilePlus, Menu
 import EmojiPicker from 'emoji-picker-react'
 import ChatImage from '../../components/ChatImage'
 import ImageModal from '../../components/ImageModal'
+import MessageStatus from '../../components/MessageStatus'
 import '../../css/Admin.css'
 
 export default function ChatArea({ 
@@ -95,8 +96,9 @@ export default function ChatArea({
                     className="admin-chat-image" 
                     loading="lazy"
                 />
-                <span className="admin-message-time" style={{ color: 'rgba(255,255,255,0.8)', paddingRight: '4px', paddingBottom: '2px' }}>
+                <span className="admin-message-time" style={{ color: 'rgba(255,255,255,0.8)', paddingRight: '4px', paddingBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {timeString}
+                    <MessageStatus status={msg.status} isOwnMessage={msg.sender_id === user.id} />
                 </span>
             </div>
         )
@@ -106,8 +108,9 @@ export default function ChatArea({
         return (
             <div className="relative group bg-transparent p-0 shadow-none border-none">
                 <p className="text-5xl leading-tight">{msg.content}</p>
-                <span className="text-gray-400 text-xs shadow-black drop-shadow-md block text-right mt-1">
+                <span className="text-gray-400 text-xs shadow-black drop-shadow-md flex items-center justify-end gap-1 mt-1">
                     {timeString}
+                    <MessageStatus status={msg.status} isOwnMessage={msg.sender_id === user.id} />
                 </span>
             </div>
         )
@@ -118,7 +121,10 @@ export default function ChatArea({
         <div className={`admin-message-bubble ${msg.sender_id === user.id ? 'sent' : 'received'}`}>
             <div className="admin-bubble-content">
                 <span>{msg.content}</span>
-                <span className="admin-message-time">{timeString}</span>
+                <span className="admin-message-time flex items-center gap-1">
+                    {timeString}
+                    <MessageStatus status={msg.status} isOwnMessage={msg.sender_id === user.id} />
+                </span>
             </div>
         </div>
     )

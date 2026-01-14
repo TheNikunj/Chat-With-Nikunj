@@ -39,7 +39,21 @@ export default function InternDashboard() {
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: true })
 
-      if (!error) setMessages(data)
+      if (!error) {
+          setMessages(data)
+          
+          // Mark incoming unread messages as read
+          const unreadIds = data
+            .filter(m => m.receiver_id === user.id && m.status !== 'read')
+            .map(m => m.id)
+          
+          if (unreadIds.length > 0) {
+              await supabase
+                .from('messages')
+                .update({ status: 'read' })
+                .in('id', unreadIds)
+          }
+      }
     }
 
     fetchMessages()
@@ -52,10 +66,26 @@ export default function InternDashboard() {
           event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `receiver_id=eq.${user.id}`, // Listen for messages sent TO me
+          // filter: `receiver_id=eq.${user.id}`, // Removing filter to be safe
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new])
+          // Client-side filter
+           if (payload.new.receiver_id === user.id || payload.new.sender_id === user.id) {
+               // Prevent Duplicates
+               setMessages((prev) => {
+                   if (prev.some(m => m.id === payload.new.id)) return prev
+                   return [...prev, payload.new]
+               })
+               
+               // Mark as read immediately if it's for me
+               if (payload.new.receiver_id === user.id) {
+                   supabase
+                        .from('messages')
+                        .update({ status: 'read' })
+                        .eq('id', payload.new.id)
+                        .then()
+               }
+           }
         }
       )
       .on(
@@ -64,22 +94,14 @@ export default function InternDashboard() {
           event: 'UPDATE',
           schema: 'public',
           table: 'messages',
-          filter: `sender_id=eq.${user.id}`, 
+          // Remove filter to ensure we catch ALL updates relating to us (RLS handles security)
         },
         (payload) => {
-          setMessages((prev) => prev.map(msg => msg.id === payload.new.id ? payload.new : msg))
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${user.id}`, 
-        },
-        (payload) => {
-          setMessages((prev) => prev.map(msg => msg.id === payload.new.id ? payload.new : msg))
+          console.log('[Intern] Message status UPDATE received:', payload.new.id, payload.new.status)
+          // Client-side filter check (optional since RLS only sends what we can see, but good practice)
+          if (payload.new.receiver_id === user.id || payload.new.sender_id === user.id) {
+             setMessages((prev) => prev.map(msg => msg.id === payload.new.id ? { ...msg, ...payload.new } : msg))
+          }
         }
       )
       .subscribe()

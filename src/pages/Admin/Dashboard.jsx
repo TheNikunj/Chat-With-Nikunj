@@ -82,6 +82,18 @@ export default function AdminDashboard() {
 
       if (!msgError) {
         setMessages(msgData)
+        
+        // Mark incoming unread messages as read (Relaxed: sender is user, I am viewing it)
+        const unreadIds = msgData
+          .filter(m => m.sender_id === selectedIntern.id && m.status !== 'read')
+          .map(m => m.id)
+        
+        if (unreadIds.length > 0) {
+            await supabase
+              .from('messages')
+              .update({ status: 'read' })
+              .in('id', unreadIds)
+        }
       } else {
         console.error('Error fetching messages:', msgError)
       }
@@ -89,15 +101,20 @@ export default function AdminDashboard() {
 
     fetchMessages()
 
+    // Specific Chat Subscription (for Updates/Reactions and own sent messages)
     const channel = supabase
       .channel(`admin-chat-${selectedIntern.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=eq.${selectedIntern.id}` }, (payload) => {
-          setMessages((prev) => [...prev, payload.new])
-      })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${selectedIntern.id}` }, (payload) => {
-           if (payload.new.sender_id !== user.id) {
-              setMessages((prev) => [...prev, payload.new])
-           }
+            // My own messages sent elsewhere (e.g. mobile)
+            // My own messages sent elsewhere (e.g. mobile)
+            if (payload.new.sender_id === user.id) {
+                setMessages((prev) => {
+                    // Prevent duplicates if specific message already added via insertMessage
+                    if (prev.some(msg => msg.id === payload.new.id)) return prev
+                    return [...prev, payload.new]
+                })
+            }
+            // Incoming messages are handled by global channel for status updates
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: `sender_id=eq.${selectedIntern.id}` }, (payload) => {
           setMessages((prev) => prev.map(msg => msg.id === payload.new.id ? payload.new : msg))
@@ -112,10 +129,119 @@ export default function AdminDashboard() {
     }
   }, [selectedIntern, user])
 
+  // Keep track of selectedIntern in a ref for the global subscription callback
+  const selectedInternRef = useRef(selectedIntern)
+  useEffect(() => {
+     selectedInternRef.current = selectedIntern
+  }, [selectedIntern])
+
+  // Global Subscription & Connect Logic (Run once per user session)
+  useEffect(() => {
+    if (!user) return
+
+    // 1. Mark all 'sent' messages to me as 'delivered' on mount
+    const markAllDelivered = async () => {
+        const { error } = await supabase
+            .from('messages')
+            .update({ status: 'delivered' })
+            .eq('receiver_id', user.id)
+            .eq('status', 'sent')
+        
+        if (error) {
+            console.error('Error marking messages as delivered:', error)
+        }
+    }
+    markAllDelivered()
+
+    // 2. Global Listener for incoming messages
+    const globalChannel = supabase
+      .channel(`admin-global-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          // filter: `receiver_id=eq.${user.id}`, // REMOVE strict filter to catch messages sent to "Old Admin ID"
+        },
+        async (payload) => {
+          const currentSelected = selectedInternRef.current
+          // If viewing the chat of the sender, mark READ
+          // Relaxed check: If message is from the selected intern (regardless of who it was 'sent' to), mark read
+          if (currentSelected && payload.new.sender_id === currentSelected.id) {
+             const { error } = await supabase
+                .from('messages')
+                .update({ status: 'read' })
+                .eq('id', payload.new.id)
+             
+             if (error) {
+                 console.error('[Admin] FAILED to mark read. RLS Check?', error)
+             } else {
+                 console.log('[Admin] Successfully marked read')
+             }
+             
+             // Update local state regardless of whether the DB update succeeded (optimistic or fallback)
+             // If error, it just stays 'sent' or whatever it came as, but at least it shows up.
+             if (selectedInternRef.current?.id === currentSelected.id) {
+                 const newStatus = !error ? 'read' : payload.new.status // use 'read' if success, else original
+                 setMessages((prev) => {
+                     if (prev.some(m => m.id === payload.new.id)) return prev
+                     return [...prev, { ...payload.new, status: newStatus }]
+                 })
+             }
+          } else {
+             // Otherwise mark DELIVERED
+             console.log('[Admin] Marking message as DELIVERED:', payload.new.id)
+             const { error: deliveredError } = await supabase
+                .from('messages')
+                .update({ status: 'delivered' })
+                .eq('id', payload.new.id)
+             
+             if (deliveredError) {
+                 console.error('[Admin] FAILED to mark delivered. RLS Check?', deliveredError)
+             } else {
+                 console.log('[Admin] Successfully marked delivered')
+             }
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+        supabase.removeChannel(globalChannel)
+    }
+  }, [user])
+
   // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Aggressive Read Watcher: If we are viewing a chat, ensure all messages from that user are marked read
+  useEffect(() => {
+    if (!selectedIntern || !user || messages.length === 0) return
+
+    // Relaxed: Don't check m.receiver_id === user.id. If it's in my chat window from this intern, I read it.
+    const unreadIds = messages
+        .filter(m => m.sender_id === selectedIntern.id && m.status !== 'read')
+        .map(m => m.id)
+    
+    if (unreadIds.length > 0) {
+        console.log('[Admin] Found', unreadIds.length, 'unread messages on screen. Marking read...')
+        
+        // fire and forget
+        supabase
+            .from('messages')
+            .update({ status: 'read' })
+            .in('id', unreadIds)
+            .then(({ error }) => {
+                if (error) console.error('[Admin] Read Watcher Error:', error)
+                else {
+                    setMessages(prev => prev.map(m => unreadIds.includes(m.id) ? { ...m, status: 'read' } : m))
+                }
+            })
+    }
+  }, [messages, selectedIntern, user])
 
   const insertMessage = async (content) => {
     if (!selectedIntern) return

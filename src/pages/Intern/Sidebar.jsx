@@ -43,6 +43,15 @@ export default function Sidebar({
         </button>
 
         <button
+          onClick={() => window.location.reload()}
+          className="intern-signout-btn"
+          title="Refresh Messages"
+        >
+          <span style={{ fontSize: '1.2rem' }}>🔄</span>
+          Refresh
+        </button>
+
+        <button
           onClick={onSignOut}
           className="intern-signout-btn"
         >
